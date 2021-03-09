@@ -1,0 +1,18 @@
+﻿<ProjectConfiguration>
+  <Settings>
+    <IgnoredTests>
+      <FixtureTestSelector>
+        <FixtureName>PDFSigner.Tests.Integration.Database.SQLiteTests</FixtureName>
+      </FixtureTestSelector>
+      <NamedTestSelector>
+        <TestName>PDFSigner.Tests.Unit.CertificateTests.Given_right_certificate_parameters_will_return_certficate_instance</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>PDFSigner.Tests.Unit.CertificateTests.Given_invalid_certificate_parameters_will_not_return_certficate_instance</TestName>
+      </NamedTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>PDFSigner.Tests.Unit.PDFSignin</FixtureName>
+      </FixtureTestSelector>
+    </IgnoredTests>
+  </Settings>
+</ProjectConfiguration>

@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31005.135
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PDFSigner", "PDFSigner\PDFSigner.csproj", "{AFE8508F-E115-4A68-82DA-CCDFE86F68FB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PDFSigner.Tests", "PDFSigner.Tests\PDFSigner.Tests.csproj", "{C9B19467-5961-42D4-A07F-386322F4284E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AFE8508F-E115-4A68-82DA-CCDFE86F68FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AFE8508F-E115-4A68-82DA-CCDFE86F68FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AFE8508F-E115-4A68-82DA-CCDFE86F68FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AFE8508F-E115-4A68-82DA-CCDFE86F68FB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C9B19467-5961-42D4-A07F-386322F4284E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9B19467-5961-42D4-A07F-386322F4284E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C9B19467-5961-42D4-A07F-386322F4284E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C9B19467-5961-42D4-A07F-386322F4284E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D2E840E2-B3D3-4190-8B77-902C932DD7B5}
+	EndGlobalSection
+EndGlobal
