@@ -12,12 +12,12 @@ Usage :
 
 - Program certificate configuration 
   ```
-  PDFSigner.exe --setup
+  PDFSign.exe --setup
   ```
 - Launch signature
 
   ```
-  PDFSigner.exe -i 1 -p "pdfpath.pdf"
+  PDFSign.exe -i 1 -p "pdfpath.pdf"
   ```
  
 
