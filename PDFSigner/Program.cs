@@ -293,6 +293,9 @@ namespace PDFSign
                 Parser.Default.ParseArguments<ApplicationParameters>(args)
                        .WithParsed<ApplicationParameters>(o =>
                        {
+                           var validparameters = o.Setup || (o.Id > 0 && !string.IsNullOrEmpty(o.PdfPath));
+
+                           if (!validparameters) { throw new ArgumentException("[Parameters] >> Invalid parameters supplied."); }
                            if (o.Verbose)
                            {
                                Console.WriteLine($"Verbose output enabled. Current Arguments: -v {o.Verbose}");
