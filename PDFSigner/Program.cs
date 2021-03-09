@@ -246,13 +246,13 @@ namespace PDFSign
         }
         static void InitRepositories()
         {
-            sqlconnectionfactory = new DBConnectionFactory(connectionstring);
+             sqlconnectionfactory = new DBConnectionFactory(connectionstring);
             certificatedatarepo = new CertificateDataRepository(sqlconnectionfactory);
         }
         static void Start(ApplicationParameters applicationParameters)
         {
             var pdfpath = applicationParameters.PdfPath;
-            if (!File.Exists(pdfpath)) { throw new FileNotFoundException(); }
+            if (!File.Exists(pdfpath)) { throw new FileNotFoundException($"[PDFLocator] PDF Location couldn't be found. : { applicationParameters.PdfPath }"); }
 
             var id = applicationParameters.Id;
 
