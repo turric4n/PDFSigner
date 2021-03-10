@@ -47,7 +47,9 @@ namespace PDFSign.Repositories
 
         public CertificateData GetByName(string Name)
         {
-            throw new System.NotImplementedException();
+            var parameters = new { BusinessName = Name };
+            var query = $"SELECT * FROM CertificateData WHERE BusinessName = @BusinessName";
+            return _dbconnection.Query<CertificateData>(query, parameters).FirstOrDefault();
         }
 
         public void Update(CertificateData Entity)

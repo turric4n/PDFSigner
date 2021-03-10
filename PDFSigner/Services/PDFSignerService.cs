@@ -29,8 +29,10 @@ namespace PDFSign
 
             using (PdfReader reader = new PdfReader(pdfstream))
             {
-                //Activate MultiSignatures
-
+                if (reader.IsEncrypted())
+                {
+                    throw new Exception("[PDFEncryptedException] Target PDF is encrypted or owned, unlock PDF and try again.");
+                }
                 var outputpdf = new MemoryStream();
                 using (PdfStamper st = PdfStamper.CreateSignature(reader, outputpdf, '\0', "tmp.pdf", true))
                 {

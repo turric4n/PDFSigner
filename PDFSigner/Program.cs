@@ -8,6 +8,7 @@ using CommandLineSelectableMenu;
 using System.Linq;
 using System.Collections.Generic;
 using System.Reflection;
+using PDFSign.Exceptions;
 
 namespace PDFSign
 {
@@ -47,7 +48,7 @@ namespace PDFSign
             Console.ForegroundColor = ConsoleColor.Magenta;
             Console.WriteLine($"New CertificateData");
             var certificatesoptions = new SelectableMenu<Action>(options);
-            var props = cert.GetType().GetProperties().Where(x => x.Name != "Id");
+            var props = cert.GetType().GetProperties();
 
             foreach (var prop in props)
             {
@@ -58,7 +59,14 @@ namespace PDFSign
 
                 certificatesoptions.Add($"{name} : {value}", () =>
                 {
-                    NewCertificateValue(cert, name, options);
+                    if (name != "Id")
+                    {
+                        NewCertificateValue(cert, name, options);
+                    }
+                    else
+                    {
+                        NewCertificate(cert, options);
+                    }                    
                 });
             }
 
@@ -141,7 +149,7 @@ namespace PDFSign
 
                 certificatesoptions.Add("Cancel", () =>
                 {
-                    CertificateUpdate(cert, options);
+                    NewCertificate(newcertificate, options);
                 });
                 certificatesoptions.Draw().Invoke();
             }
@@ -162,7 +170,7 @@ namespace PDFSign
             Console.WriteLine($"Certificate edit : {cert.Businessname}");
 
             var certificatesoptions = new SelectableMenu<Action>(options);
-            var props = cert.GetType().GetProperties().Where(x => x.Name != "Id");
+            var props = cert.GetType().GetProperties();
 
             foreach (var prop in props)
             {
@@ -173,7 +181,14 @@ namespace PDFSign
 
                 certificatesoptions.Add($"{name} : {value}", () =>
                {
-                   UpdateCertificateValue(cert, name, options);
+                   if (name != "Id")
+                   {
+                       UpdateCertificateValue(cert, name, options);
+                   }
+                   else
+                   {
+                       CertificateUpdate(cert, options);
+                   }                   
                });
             }
             certificatesoptions.Add("Back", () =>
@@ -254,9 +269,19 @@ namespace PDFSign
             var pdfpath = applicationParameters.PdfPath;
             if (!File.Exists(pdfpath)) { throw new FileNotFoundException($"[PDFLocator] PDF Location couldn't be found. : { applicationParameters.PdfPath }"); }
 
-            var id = applicationParameters.Id;
+            CertificateData certificatedata = null;
 
-            var certificatedata = certificatedatarepo.GetById(id);
+            if (applicationParameters.Id > 0)
+            {
+                certificatedata = certificatedatarepo.GetById(applicationParameters.Id);
+            }
+
+            else if (!string.IsNullOrEmpty(applicationParameters.CertificateName))
+            {
+                certificatedata = certificatedatarepo.GetByName(applicationParameters.CertificateName);
+            }
+
+            if (certificatedata == null) { throw new RepositoryNotFoundException($"[CertificateDataRepository] Certificate info {applicationParameters.Id} {applicationParameters.CertificateName} not found.");  }
 
             var pdfsignin = new PDFSignerService();
 
@@ -293,7 +318,9 @@ namespace PDFSign
                 Parser.Default.ParseArguments<ApplicationParameters>(args)
                        .WithParsed<ApplicationParameters>(o =>
                        {
-                           var validparameters = o.Setup || (o.Id > 0 && !string.IsNullOrEmpty(o.PdfPath));
+                           var validparameters = o.Setup
+                                || (o.Id > 0 ^ !(string.IsNullOrEmpty(o.CertificateName)) 
+                                && !string.IsNullOrEmpty(o.PdfPath));
 
                            if (!validparameters) { throw new ArgumentException("[Parameters] >> Invalid parameters supplied."); }
                            if (o.Verbose)
