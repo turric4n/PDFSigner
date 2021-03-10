@@ -15,10 +15,11 @@ Usage :
   PDFSign.exe --setup
   ```
 - Launch signature
-
   ```
-  PDFSign.exe -i 1 -p "pdfpath.pdf"
+  PDFSign.exe -n MyCertificate -p "pdfpath.pdf"
   ```
+  
+  ![Demo](PDFSign.gif)
  
 
 
