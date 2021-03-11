@@ -1,6 +1,6 @@
 # PDFSigner
 
-Highly customizable command line utility to sign PDF documents using PFX certificates. Perfect to call inline from scripts, batches or old programs that cannot sign PDF files OOB.
+Highly customizable command line utility to sign PDF documents using PKCS #12 certificate files. Perfect to call inline from scripts, batches or old programs that cannot sign PDF files OOB.
 
 Features :
 
@@ -15,10 +15,11 @@ Usage :
   PDFSign.exe --setup
   ```
 - Launch signature
-
   ```
-  PDFSign.exe -i 1 -p "pdfpath.pdf"
+  PDFSign.exe -n MyCertificate -p "pdfpath.pdf"
   ```
+  
+  ![Demo](PDFSign.gif)
  
 
 
