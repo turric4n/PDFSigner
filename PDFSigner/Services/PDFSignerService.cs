@@ -49,6 +49,16 @@ namespace PDFSign
                 }
             }
         }
+
+        public bool IsSigned(Stream pdfstream)
+        {
+            using (PdfReader reader = new PdfReader(pdfstream))
+            {
+                AcroFields acroFields = reader.AcroFields;
+                var a = acroFields.Fields["Signature1"];
+                return a != null;
+            }
+        }
     }
 }
 

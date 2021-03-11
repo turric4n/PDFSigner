@@ -11,5 +11,6 @@ namespace PDFSign.Services
     public interface IPDFSignerService
     {
         Stream SignPDF(Stream pdfstream, Certificate certificate);
+        bool IsSigned(Stream pdfstream);
     }
 }
