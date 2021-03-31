@@ -263,7 +263,7 @@ namespace PDFSign
         static void InitRepositories()
         {
             var cs = $"{connectionstring}{System.IO.Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "PDFSign.db")}";
-            Console.WriteLine(cs);
+            cs = cs.Contains("\\") ? cs.Replace("\\", "\\\\") : cs;
             sqlconnectionfactory = new DBConnectionFactory(cs);
             certificatedatarepo = new CertificateDataRepository(sqlconnectionfactory);
         }
