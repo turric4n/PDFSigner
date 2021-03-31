@@ -8,13 +8,14 @@ using CommandLineSelectableMenu;
 using System.Linq;
 using System.Collections.Generic;
 using System.Reflection;
+using Org.BouncyCastle.Asn1.X9;
 using PDFSign.Exceptions;
 
 namespace PDFSign
 {
     class Program
     {
-        static string connectionstring = "Data Source=PDFSign.db";
+        static string connectionstring = "Data Source=";
         static DBConnectionFactory sqlconnectionfactory;
         static CertificateDataRepository certificatedatarepo;
 
@@ -261,7 +262,9 @@ namespace PDFSign
         }
         static void InitRepositories()
         {
-             sqlconnectionfactory = new DBConnectionFactory(connectionstring);
+            var cs = $"{connectionstring}{System.IO.Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "PDFSign.db")}";
+            Console.WriteLine(cs);
+            sqlconnectionfactory = new DBConnectionFactory(cs);
             certificatedatarepo = new CertificateDataRepository(sqlconnectionfactory);
         }
         static void Start(ApplicationParameters applicationParameters)
