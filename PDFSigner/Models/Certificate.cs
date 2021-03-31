@@ -17,10 +17,10 @@ namespace PDFSign.Models
         public Org.BouncyCastle.X509.X509Certificate[] Chain { get; private set;  }
         public RsaPrivateCrtKeyParameters Parameters { get; private set; }
 
-        public Certificate(Stream stream, string Password)
+        public Certificate(Stream stream, string password)
         {
             _stream = stream;
-            _password = Password;            
+            _password = password;            
         }
         
         public void Init()

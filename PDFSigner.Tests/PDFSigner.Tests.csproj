@@ -45,6 +45,9 @@
     <Compile Include="Unit\PDFSignin.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="test.p12">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <None Include="app.config" />
     <Content Include="test.pfx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

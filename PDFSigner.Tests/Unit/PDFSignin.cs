@@ -17,15 +17,18 @@ namespace PDFSigner.Tests.Unit
     {
         private string _pdfpath;
         private string _pfxpath;
+        private string _p12path;
         private const string _CERTPASS = "apples";
+        private const string _CERTPASSP12 = "test";
         [SetUp]
         public void Init()
         {
             _pdfpath = Path.Combine(TestContext.CurrentContext.TestDirectory, "test.pdf");
             _pfxpath = Path.Combine(TestContext.CurrentContext.TestDirectory, "test.pfx");
+            _p12path = Path.Combine(TestContext.CurrentContext.TestDirectory, "test.p12");
         }
         [Test]
-        public void Given_valid_PDF_file_and_certificate_will_be_signed()
+        public void Given_valid_PDF_file_and_PFX_certificate_will_be_signed()
         {
             //Arrange
             using (var certificatestream = new FileStream(_pfxpath, FileMode.Open))
@@ -39,6 +42,23 @@ namespace PDFSigner.Tests.Unit
                     Assert.DoesNotThrow(() => { signerservice.SignPDF(stream, certificate); });
                 }
             }            
+        }
+
+        [Test]
+        public void Given_valid_PDF_file_and_P12_certificate_will_be_signed()
+        {
+            //Arrange
+            using (var certificatestream = new FileStream(_p12path, FileMode.Open))
+            {
+                var certificate = new Certificate(certificatestream, _CERTPASSP12);
+                certificate.Init();
+                var signerservice = new PDFSignerService();
+                using (var stream = new FileStream(_pdfpath, FileMode.Open))
+                {
+                    //Act //Assert
+                    Assert.DoesNotThrow(() => { signerservice.SignPDF(stream, certificate); });
+                }
+            }
         }
 
         [Test]
