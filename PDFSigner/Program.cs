@@ -336,6 +336,15 @@ namespace PDFSign
             signedpdf.Position = 0;
 
             _logger?.Info("Start()", $"Delete PDF File : {pdfpath}");
+
+            if (applicationParameters.SaveOriginal)
+            {
+                _logger?.Info("Start()","Keep original file flagged.");
+                var oldFilenamePath = Path.Combine(Path.GetDirectoryName(pdfpath), (Path.GetFileNameWithoutExtension(pdfpath) + $"_original{Path.GetExtension(pdfpath)}"));
+
+                _logger?.Info("Start()", $"Copy original file : {pdfpath} to : {oldFilenamePath}");
+                File.Copy(pdfpath, oldFilenamePath);
+            }
             File.Delete(pdfpath);
 
             _logger?.Info("Start()", $"Create signed PDF File : {pdfpath}");

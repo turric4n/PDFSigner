@@ -17,6 +17,8 @@ namespace PDFSign.Models
         public string CertificateName { get; set; }
         [Option('p', "pdfpath", Required = false, HelpText = "Set absolute pdfpath")]
         public string PdfPath { get; set; }
+        [Option('k', "keep", Required = false, HelpText = "Keep original PDF file. It will concat _original to file (Ex. 1_original.pdf)", Default = true)]
+        public bool SaveOriginal { get; set; }
         [Option('s', "setup", Required = false, HelpText = "Setup flag, to configure certificate data")]
         public bool Setup { get; set; }
     }
