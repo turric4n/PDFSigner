@@ -8,8 +8,10 @@ using CommandLineSelectableMenu;
 using System.Linq;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Org.BouncyCastle.Asn1.X9;
 using PDFSign.Exceptions;
+using QuickLogger.Extensions.Wrapper.Application.Services;
 
 namespace PDFSign
 {
@@ -18,7 +20,24 @@ namespace PDFSign
         static string connectionstring = "Data Source=";
         static DBConnectionFactory sqlconnectionfactory;
         static CertificateDataRepository certificatedatarepo;
+        private static ILoggerService _logger;
 
+        private static void InitLogger()
+        {
+            var executingPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+
+            var settingsPath = Path.Combine(executingPath, "QuickLogger.json");
+
+            if (!File.Exists(settingsPath))
+            {
+                Console.WriteLine($"Logger settings not found {settingsPath}");
+                return;
+            }
+
+            var settings = File.ReadAllText(settingsPath);
+            _logger = new QuickLoggerService(settings);
+            _logger?.Info("InitLogger()", "Logger Init");
+        }
         static void CreateMainMenu(SelectableMenuOptions options)
         {
             Console.Clear();
@@ -76,6 +95,7 @@ namespace PDFSign
                 try
                 {
                     certificatedatarepo.Add(cert);
+                    _logger?.Info("NewCertificate()", "Certificate added into repository.");
                     CreateMainMenu(options);
                 }
                 catch (Exception ex)
@@ -103,6 +123,7 @@ namespace PDFSign
             certificatesoptions.Add("Yes", () =>
             {
                 certificatedatarepo.Delete(cert);
+                _logger?.Info("CertificateDelete()", "Certificate deleted from repository.");
             });
             certificatesoptions.Add("No", () =>
             {
@@ -145,6 +166,7 @@ namespace PDFSign
                 certificatesoptions.Add("Save", () =>
                 {
                     certificatedatarepo.Update(newcertificate);
+                    _logger?.Info("UpdateCertificateValue()", "Certificate updated into repository.");
                     CertificateUpdate(newcertificate, options);
                 });
 
@@ -272,40 +294,51 @@ namespace PDFSign
             var pdfpath = applicationParameters.PdfPath;
             if (!File.Exists(pdfpath)) { throw new FileNotFoundException($"[PDFLocator] PDF Location couldn't be found. : { applicationParameters.PdfPath }"); }
 
+            _logger?.Info("Start()", $"Target PDF Path : {pdfpath}");
+
             CertificateData certificatedata = null;
 
             if (applicationParameters.Id > 0)
             {
+                _logger?.Info("Start()", $"Certificate Id passed : {applicationParameters.Id}");
                 certificatedata = certificatedatarepo.GetById(applicationParameters.Id);
             }
 
             else if (!string.IsNullOrEmpty(applicationParameters.CertificateName))
             {
+                _logger?.Info("Start()", $"Certificate Name passed : {applicationParameters.CertificateName}");
                 certificatedata = certificatedatarepo.GetByName(applicationParameters.CertificateName);
             }
 
             if (certificatedata == null) { throw new RepositoryNotFoundException($"[CertificateDataRepository] Certificate info {applicationParameters.Id} {applicationParameters.CertificateName} not found.");  }
 
+            _logger?.Info("Start()", $"Create PDF Engine.");
             var pdfsignin = new PDFSignerService();
 
             Stream signedpdf = null;
 
+            _logger?.Info("Start()", $"Loading Certificate Data : {certificatedata.Path}");
             using (var certificateStream = new FileStream(certificatedata.Path, FileMode.Open))
             {
                 var certificate = new Certificate(certificateStream, certificatedata.Password);
 
+                _logger?.Info("Start()", $"Initialize Certificate Data : {certificatedata.Path}");
                 certificate.Init();
 
+                _logger?.Info("Start()", $"Loading PDF [memory] : {pdfpath}");
                 using (var pdfstream = new FileStream(pdfpath, FileMode.Open))
                 {
+                    _logger?.Info("Start()", $"Sign PDF [memory]");
                     signedpdf = pdfsignin.SignPDF(pdfstream, certificate);
                 }
             }
 
             signedpdf.Position = 0;
 
+            _logger?.Info("Start()", $"Delete PDF File : {pdfpath}");
             File.Delete(pdfpath);
 
+            _logger?.Info("Start()", $"Create signed PDF File : {pdfpath}");
             using (var newfile = new FileStream(pdfpath, FileMode.OpenOrCreate))
             {
                 signedpdf.CopyTo(newfile);
@@ -317,6 +350,7 @@ namespace PDFSign
         {
             try
             {
+                InitLogger();
                 InitRepositories();
                 Parser.Default.ParseArguments<ApplicationParameters>(args)
                        .WithParsed<ApplicationParameters>(o =>
@@ -328,20 +362,22 @@ namespace PDFSign
                            if (!validparameters) { throw new ArgumentException("[Parameters] >> Invalid parameters supplied."); }
                            if (o.Verbose)
                            {
-                               Console.WriteLine($"Verbose output enabled. Current Arguments: -v {o.Verbose}");
+                               _logger?.Info("Main()",$"Verbose output enabled. Current Arguments: -v {o.Verbose}");
                            }
                            if (o.Setup)
                            {
+                               _logger?.Info("Main()", $"Invoke setup.");
                                Setup();
                                return;
                            }
 
                            Start(o);
                        });
+                _logger?.Info("Main()", $"Exit");
             }
             catch (Exception ex)
             {
-                Console.Write(ex.Message);
+                _logger?.Error("Main()",ex.Message);
             }
         }
     }
