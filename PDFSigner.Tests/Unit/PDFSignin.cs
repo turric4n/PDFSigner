@@ -18,6 +18,7 @@ namespace PDFSigner.Tests.Unit
         private string _pdfpath;
         private string _pfxpath;
         private string _p12path;
+        private string _signedPdfPath;
         private const string _CERTPASS = "apples";
         private const string _CERTPASSP12 = "test";
         [SetUp]
@@ -26,7 +27,26 @@ namespace PDFSigner.Tests.Unit
             _pdfpath = Path.Combine(TestContext.CurrentContext.TestDirectory, "test.pdf");
             _pfxpath = Path.Combine(TestContext.CurrentContext.TestDirectory, "test.pfx");
             _p12path = Path.Combine(TestContext.CurrentContext.TestDirectory, "test.p12");
+            _signedPdfPath = Path.Combine(TestContext.CurrentContext.TestDirectory, "signed_test.pdf");
         }
+
+        private void SavePdfFile(Stream stream, string path)
+        {
+            using (var newfile = new FileStream(path, FileMode.OpenOrCreate))
+            {
+                stream.CopyTo(newfile);
+            }
+        }
+
+        private void DeleteOldSigned(string path)
+        {
+            if (!File.Exists(path))
+            {
+                return;
+            }
+            File.Delete(path);
+        }
+
         [Test]
         public void Given_valid_PDF_file_and_PFX_certificate_will_be_signed()
         {
@@ -97,5 +117,11 @@ namespace PDFSigner.Tests.Unit
                 }
             }
         }
+
+        [Test]
+        public void Given_valid_PDF_file_and_certificate_will_be_signed_and_validated_2_times()
+        {
+            
+        } 
     }
 }
