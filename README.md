@@ -43,12 +43,11 @@ PDFSign.exe -n MyCertificate -p "path/to/document.pdf"
 | Option | Short | Description |
 |--------|-------|-------------|
 | `--name` | `-n` | Certificate name (configured in setup) |
-| `--pdf` | `-p` | Path to the PDF file to sign |
-| `--output` | `-o` | Output path (optional, defaults to overwriting input) |
-| `--reason` | `-r` | Reason for signing (optional) |
-| `--location` | `-l` | Location of signing (optional) |
-| `--verbose` | `-v` | Enable verbose logging |
-| `--setup` | | Launch the certificate configuration wizard |
+| `--id` | `-i` | Set business id (alternative to using name) |
+| `--pdfpath` | `-p` | Path to the PDF file to sign |
+| `--keep` | `-k` | Keep original PDF file with "_original" suffix (default: true) |
+| `--verbose` | `-v` | Set output to verbose messages |
+| `--setup` | `-s` | Launch the certificate configuration wizard |
 | `--help` | `-h` | Display help information |
 | `--version` | | Display version information |
 
