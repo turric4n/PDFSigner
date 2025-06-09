@@ -1,65 +1,67 @@
-﻿using System;
-using System.IO;
-using CommandLine;
+﻿using CommandLine;
+using CommandLineSelectableMenu;
+using PDFSign.Database.Factories;
+using PDFSign.Exceptions;
 using PDFSign.Models;
 using PDFSign.Repositories;
-using PDFSign.Database.Factories;
-using CommandLineSelectableMenu;
-using System.Linq;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using Org.BouncyCastle.Asn1.X9;
-using PDFSign.Exceptions;
 using QuickLogger.Extensions.Wrapper.Application.Services;
+using System;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using PDFSign.Services;
 
 namespace PDFSign
 {
     class Program
     {
-        static string connectionstring = "Data Source=";
-        static DBConnectionFactory sqlconnectionfactory;
-        static CertificateDataRepository certificatedatarepo;
+        private const string ConnectionString = "Data Source=";
+        private static DbConnectionFactory _sqlConnectionFactory;
+        private static CertificateDataRepository _certificateDataRepository;
         private static ILoggerService _logger;
 
         private static void InitLogger()
         {
             var executingPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
-            var settingsPath = Path.Combine(executingPath, "QuickLogger.json");
-
-            if (!File.Exists(settingsPath))
+            if (executingPath != null)
             {
-                Console.WriteLine($"Logger settings not found {settingsPath}");
-                return;
+                var settingsPath = Path.Combine(executingPath, "QuickLogger.json");
+
+                if (!File.Exists(settingsPath))
+                {
+                    Console.WriteLine($"Logger settings not found {settingsPath}");
+                    return;
+                }
+
+                var settings = File.ReadAllText(settingsPath);
+                _logger = new QuickLoggerService(settings);
             }
 
-            var settings = File.ReadAllText(settingsPath);
-            _logger = new QuickLoggerService(settings);
             _logger?.Info("InitLogger()", "Logger Init");
         }
         static void CreateMainMenu(SelectableMenuOptions options)
         {
             Console.Clear();
-            var mainmenu = new SelectableMenu<Action>(options);
+            var mainMenu = new SelectableMenu<Action>(options);
 
             Console.ForegroundColor = ConsoleColor.Magenta;
             Console.WriteLine("Main Menu");
 
             // add menu item.
-            mainmenu.Add("List Certificates", () =>
+            mainMenu.Add("List Certificates", () =>
             {
                 CertificatesListMenu(options);
             });
-            mainmenu.Add("Add new certificate settings", () =>
+            mainMenu.Add("Add new certificate settings", () =>
             {
                 var certificate = new CertificateData();
                 NewCertificate(certificate, options);
             });
 
-            mainmenu.Add("Exit ", () => { System.Environment.Exit(1); });
+            mainMenu.Add("Exit ", () => { System.Environment.Exit(1); });
 
-            mainmenu.Draw().Invoke();
+            mainMenu.Draw().Invoke();
         }
 
         static void NewCertificate(CertificateData cert, SelectableMenuOptions options)
@@ -67,7 +69,7 @@ namespace PDFSign
             Console.Clear();
             Console.ForegroundColor = ConsoleColor.Magenta;
             Console.WriteLine($"New CertificateData");
-            var certificatesoptions = new SelectableMenu<Action>(options);
+            var certificatesOptions = new SelectableMenu<Action>(options);
             var props = cert.GetType().GetProperties();
 
             foreach (var prop in props)
@@ -77,7 +79,7 @@ namespace PDFSign
 
                 value = name == "Password" ? "****" : value;
 
-                certificatesoptions.Add($"{name} : {value}", () =>
+                certificatesOptions.Add($"{name} : {value}", () =>
                 {
                     if (name != "Id")
                     {
@@ -90,11 +92,11 @@ namespace PDFSign
                 });
             }
 
-            certificatesoptions.Add("Save", () =>
+            certificatesOptions.Add("Save", () =>
             {
                 try
                 {
-                    certificatedatarepo.Add(cert);
+                    _certificateDataRepository.Add(cert);
                     _logger?.Info("NewCertificate()", "Certificate added into repository.");
                     CreateMainMenu(options);
                 }
@@ -106,31 +108,31 @@ namespace PDFSign
                 }                
             });
 
-            certificatesoptions.Add("Cancel", () =>
+            certificatesOptions.Add("Cancel", () =>
             {
                 CreateMainMenu(options);
             });
 
-            certificatesoptions.Draw().Invoke();
+            certificatesOptions.Draw().Invoke();
         }
         static void CertificateDelete(CertificateData cert, SelectableMenuOptions options)
         {
             Console.Clear();
             Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.WriteLine($"Are you sure to delete : {cert.Businessname} ?");
+            Console.WriteLine($"Are you sure to delete : {cert.BusinessName} ?");
 
-            var certificatesoptions = new SelectableMenu<Action>(options);
-            certificatesoptions.Add("Yes", () =>
+            var certificatesOptions = new SelectableMenu<Action>(options);
+            certificatesOptions.Add("Yes", () =>
             {
-                certificatedatarepo.Delete(cert);
+                _certificateDataRepository.Delete(cert);
                 _logger?.Info("CertificateDelete()", "Certificate deleted from repository.");
             });
-            certificatesoptions.Add("No", () =>
+            certificatesOptions.Add("No", () =>
             {
                 CertificateOptions(cert, options);
             });
 
-            certificatesoptions.Draw().Invoke();
+            certificatesOptions.Draw().Invoke();
         }
 
         static void NewCertificateValue(CertificateData cert, string Name, SelectableMenuOptions options)
@@ -139,10 +141,13 @@ namespace PDFSign
             Console.ForegroundColor = ConsoleColor.Magenta;
             Console.WriteLine($"Editing value : {Name}");
             Console.WriteLine($"New value : ");
-            var stin = Console.ReadLine();
-            var prop = cert.GetType().GetProperties().Where(x => x.Name == Name).FirstOrDefault();
+            var consoleInput = Console.ReadLine();
+            var prop = cert
+                .GetType()
+                .GetProperties()
+                .FirstOrDefault(x => x.Name == Name);
 
-            prop.SetValue(cert, stin);
+            prop.SetValue(cert, consoleInput);
            
             NewCertificate(cert, options);
         }
@@ -153,28 +158,32 @@ namespace PDFSign
             Console.ForegroundColor = ConsoleColor.Magenta;
             Console.WriteLine($"Editing value : {Name}");
             Console.WriteLine($"New value : ");
-            var stin = Console.ReadLine();
-            var certificatesoptions = new SelectableMenu<Action>(options);
+            var consoleInput = Console.ReadLine();
+            var certificateOptions = new SelectableMenu<Action>(options);
 
-            var prop = cert.GetType().GetProperties().Where(x => x.Name == Name).FirstOrDefault();
+            var certificatePropertyInfo = cert
+                .GetType()
+                .GetProperties()
+                .FirstOrDefault(x => x.Name == Name);
 
-            prop.SetValue(cert, stin);
+            if (certificatePropertyInfo != null) certificatePropertyInfo.SetValue(cert, consoleInput);
+
             try
             {
-                var newcertificate = new CertificateData(cert.Id, cert.Password, cert.Path, cert.Businessname);
+                var newCertificate = new CertificateData(cert.Id, cert.Password, cert.Path, cert.BusinessName);
 
-                certificatesoptions.Add("Save", () =>
+                certificateOptions.Add("Save", () =>
                 {
-                    certificatedatarepo.Update(newcertificate);
+                    _certificateDataRepository.Update(newCertificate);
                     _logger?.Info("UpdateCertificateValue()", "Certificate updated into repository.");
-                    CertificateUpdate(newcertificate, options);
+                    CertificateUpdate(newCertificate, options);
                 });
 
-                certificatesoptions.Add("Cancel", () =>
+                certificateOptions.Add("Cancel", () =>
                 {
-                    NewCertificate(newcertificate, options);
+                    NewCertificate(newCertificate, options);
                 });
-                certificatesoptions.Draw().Invoke();
+                certificateOptions.Draw().Invoke();
             }
             catch (Exception ex)
             {
@@ -190,9 +199,9 @@ namespace PDFSign
         {
             Console.Clear();
             Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.WriteLine($"Certificate edit : {cert.Businessname}");
+            Console.WriteLine($"Certificate edit : {cert.BusinessName}");
 
-            var certificatesoptions = new SelectableMenu<Action>(options);
+            var selectableMenu = new SelectableMenu<Action>(options);
             var props = cert.GetType().GetProperties();
 
             foreach (var prop in props)
@@ -202,7 +211,7 @@ namespace PDFSign
 
                 value = name == "Password" ? "****" : value;
 
-                certificatesoptions.Add($"{name} : {value}", () =>
+                selectableMenu.Add($"{name} : {value}", () =>
                {
                    if (name != "Id")
                    {
@@ -214,35 +223,32 @@ namespace PDFSign
                    }                   
                });
             }
-            certificatesoptions.Add("Back", () =>
-            {
-                Console.Clear();
-            });
+            selectableMenu.Add("Back", Console.Clear);
 
-            certificatesoptions.Draw().Invoke();
+            selectableMenu
+                .Draw()
+                .Invoke();
         }
         static void CertificateOptions(CertificateData cert, SelectableMenuOptions options)
         {
             Console.Clear();
             Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.WriteLine($"Certificate edit : {cert.Businessname}");
+            Console.WriteLine($"Certificate edit : {cert.BusinessName}");
 
-            var certificatesoptions = new SelectableMenu<Action>(options);
-            certificatesoptions.Add("Update values", () =>
+            var certificateOptions = new SelectableMenu<Action>(options);
+            certificateOptions.Add("Update values", () =>
             {
                 CertificateUpdate(cert, options);
             });
-            certificatesoptions.Add("Delete", () =>
+            certificateOptions.Add("Delete", () =>
             {
                 CertificateDelete(cert, options);
                 CertificatesListMenu(options);
             });
 
-            certificatesoptions.Add("Back", () =>
-            {
-                Console.Clear();
-            });
-            certificatesoptions.Draw().Invoke();
+            certificateOptions.Add("Back", Console.Clear);
+
+            certificateOptions.Draw().Invoke();
         }
         static void CertificatesListMenu(SelectableMenuOptions options)
         {
@@ -250,27 +256,28 @@ namespace PDFSign
             Console.ForegroundColor = ConsoleColor.Magenta;
             Console.WriteLine("Certificates");
 
-            var certificatesmenu = new SelectableMenu<Action>(options);
+            var certificatesMenu = new SelectableMenu<Action>(options);
 
-            var certificates = certificatedatarepo.GetAll();
+            var certificates = _certificateDataRepository.GetAll();
             foreach (var cert in certificates)
             {
-                certificatesmenu.Add(cert.Businessname, () =>
+                certificatesMenu.Add(cert.BusinessName, () =>
                 {
                     CertificateOptions(cert, options);
                     CertificatesListMenu(options);
                 });
             }
 
-            certificatesmenu.Add("Back", () =>
+            certificatesMenu.Add("Back", () =>
             {
                 Console.Clear();
                 CreateMainMenu(options);
             });
 
-            certificatesmenu.Draw().Invoke();
+            certificatesMenu.Draw().Invoke();
         }
-        static void Setup()
+
+        private static void Setup()
         {
             var menuOptions = new SelectableMenuOptions()
             {
@@ -284,10 +291,10 @@ namespace PDFSign
         }
         static void InitRepositories()
         {
-            var cs = $"{connectionstring}{System.IO.Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "PDFSign.db")}";
+            var cs = $"{ConnectionString}{System.IO.Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location) ?? string.Empty, "PDFSign.db")}";
             cs = cs.Contains("\\") ? cs.Replace("\\", "\\\\") : cs;
-            sqlconnectionfactory = new DBConnectionFactory(cs);
-            certificatedatarepo = new CertificateDataRepository(sqlconnectionfactory);
+            _sqlConnectionFactory = new DbConnectionFactory(cs);
+            _certificateDataRepository = new CertificateDataRepository(_sqlConnectionFactory);
         }
         static void Start(ApplicationParameters applicationParameters)
         {
@@ -296,49 +303,49 @@ namespace PDFSign
 
             _logger?.Info("Start()", $"Target PDF Path : {pdfpath}");
 
-            CertificateData certificatedata = null;
+            CertificateData certificateData = null;
 
             if (applicationParameters.Id > 0)
             {
                 _logger?.Info("Start()", $"Certificate Id passed : {applicationParameters.Id}");
-                certificatedata = certificatedatarepo.GetById(applicationParameters.Id);
+                certificateData = _certificateDataRepository.GetById(applicationParameters.Id);
             }
 
             else if (!string.IsNullOrEmpty(applicationParameters.CertificateName))
             {
                 _logger?.Info("Start()", $"Certificate Name passed : {applicationParameters.CertificateName}");
-                certificatedata = certificatedatarepo.GetByName(applicationParameters.CertificateName);
+                certificateData = _certificateDataRepository.GetByName(applicationParameters.CertificateName);
             }
 
-            if (certificatedata == null) { throw new RepositoryNotFoundException($"[CertificateDataRepository] Certificate info {applicationParameters.Id} {applicationParameters.CertificateName} not found.");  }
+            if (certificateData == null) { throw new RepositoryNotFoundException($"[CertificateDataRepository] Certificate info {applicationParameters.Id} {applicationParameters.CertificateName} not found.");  }
 
             _logger?.Info("Start()", $"Create PDF Engine.");
-            var pdfsignin = new PDFSignerService();
+            var pdfSignerService = new PdfSignerService();
 
-            Stream signedpdf = null;
+            Stream signedPdfStream = null;
 
-            _logger?.Info("Start()", $"Loading Certificate Data : {certificatedata.Path}");
-            using (var certificateStream = new FileStream(certificatedata.Path, FileMode.Open))
+            _logger?.Info("Start()", $"Loading Certificate Data : {certificateData.Path}");
+            using (var certificateStream = new FileStream(certificateData.Path, FileMode.Open))
             {
-                var certificate = new Certificate(certificateStream, certificatedata.Password);
+                var certificate = new Certificate(certificateStream, certificateData.Password);
 
-                _logger?.Info("Start()", $"Initialize Certificate Data : {certificatedata.Path}");
+                _logger?.Info("Start()", $"Initialize Certificate Data : {certificateData.Path}");
                 certificate.Init();
 
                 _logger?.Info("Start()", $"Loading PDF [memory] : {pdfpath}");
                 using (var pdfstream = new FileStream(pdfpath, FileMode.Open))
                 {
                     _logger?.Info("Start()", $"Sign PDF [memory]");
-                    signedpdf = pdfsignin.SignPDF(pdfstream, certificate);
+                    signedPdfStream = pdfSignerService.SignPdf(pdfstream, certificate);
                 }
             }
 
-            signedpdf.Position = 0;
+            signedPdfStream.Position = 0;
 
             if (applicationParameters.SaveOriginal)
             {
                 _logger?.Info("Start()","Keep original file flagged.");
-                var oldFilenamePath = Path.Combine(Path.GetDirectoryName(pdfpath), (Path.GetFileNameWithoutExtension(pdfpath) + $"_original{Path.GetExtension(pdfpath)}"));
+                var oldFilenamePath = Path.Combine(Path.GetDirectoryName(pdfpath) ?? string.Empty, (Path.GetFileNameWithoutExtension(pdfpath) + $"_original{Path.GetExtension(pdfpath)}"));
 
                 _logger?.Info("Start()", $"Copy original file : {pdfpath} to : {oldFilenamePath}");
                 File.Copy(pdfpath, oldFilenamePath);
@@ -349,12 +356,12 @@ namespace PDFSign
             File.Delete(pdfpath);
 
             _logger?.Info("Start()", $"Create signed PDF File : {pdfpath}");
-            using (var newfile = new FileStream(pdfpath, FileMode.OpenOrCreate))
+            using (var fileStream = new FileStream(pdfpath, FileMode.OpenOrCreate))
             {
-                signedpdf.CopyTo(newfile);
+                signedPdfStream.CopyTo(fileStream);
             }
 
-            signedpdf.Dispose();
+            signedPdfStream.Dispose();
         }
         static void Main(string[] args)
         {
@@ -365,11 +372,11 @@ namespace PDFSign
                 Parser.Default.ParseArguments<ApplicationParameters>(args)
                        .WithParsed<ApplicationParameters>(o =>
                        {
-                           var validparameters = o.Setup
+                           var validParameters = o.Setup
                                 || (o.Id > 0 ^ !(string.IsNullOrEmpty(o.CertificateName)) 
                                 && !string.IsNullOrEmpty(o.PdfPath));
 
-                           if (!validparameters) { throw new ArgumentException("[Parameters] >> Invalid parameters supplied."); }
+                           if (!validParameters) { throw new ArgumentException("[Parameters] >> Invalid parameters supplied."); }
                            if (o.Verbose)
                            {
                                _logger?.Info("Main()",$"Verbose output enabled. Current Arguments: -v {o.Verbose}");

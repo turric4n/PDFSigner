@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Castle.DynamicProxy.Generators.Emitters.SimpleAST;
+using PDFSign.Services;
 using Assert = NUnit.Framework.Assert;
 
 namespace PDFSigner.Tests.Unit
@@ -55,11 +56,11 @@ namespace PDFSigner.Tests.Unit
             {
                 var certificate = new Certificate(certificatestream, _CERTPASS);
                 certificate.Init();
-                var signerservice = new PDFSignerService();
+                var signerservice = new PdfSignerService();
                 using (var stream = new FileStream(_pdfpath, FileMode.Open))
                 {
                     //Act //Assert
-                    Assert.DoesNotThrow(() => { signerservice.SignPDF(stream, certificate); });
+                    Assert.DoesNotThrow(() => { signerservice.SignPdf(stream, certificate); });
                 }
             }            
         }
@@ -72,11 +73,11 @@ namespace PDFSigner.Tests.Unit
             {
                 var certificate = new Certificate(certificatestream, _CERTPASSP12);
                 certificate.Init();
-                var signerservice = new PDFSignerService();
+                var signerservice = new PdfSignerService();
                 using (var stream = new FileStream(_pdfpath, FileMode.Open))
                 {
                     //Act //Assert
-                    Assert.DoesNotThrow(() => { signerservice.SignPDF(stream, certificate); });
+                    Assert.DoesNotThrow(() => { signerservice.SignPdf(stream, certificate); });
                 }
             }
         }
@@ -89,11 +90,11 @@ namespace PDFSigner.Tests.Unit
             {
                 var certificate = new Certificate(certificatestream, _CERTPASS);
                 certificate.Init();
-                var signerservice = new PDFSignerService();
+                var signerservice = new PdfSignerService();
                 using (var stream = new FileStream(_pdfpath, FileMode.Open))
                 {
                     //Act //Assert
-                    Assert.DoesNotThrow(() => { signerservice.SignPDF(stream, certificate); });
+                    Assert.DoesNotThrow(() => { signerservice.SignPdf(stream, certificate); });
                     Assert.IsTrue(File.Exists(_pdfpath));
                 }
             }
@@ -107,12 +108,12 @@ namespace PDFSigner.Tests.Unit
             {
                 var certificate = new Certificate(certificatestream, _CERTPASS);
                 certificate.Init();
-                var signerservice = new PDFSignerService();
+                var signerservice = new PdfSignerService();
                 using (var stream = new FileStream(_pdfpath, FileMode.Open))
                 {
                     Stream signed = null;
                     //Act //Assert
-                    Assert.DoesNotThrow(() => { signed = signerservice.SignPDF(stream, certificate); });
+                    Assert.DoesNotThrow(() => { signed = signerservice.SignPdf(stream, certificate); });
                     signerservice.IsSigned(signed);
                 }
             }

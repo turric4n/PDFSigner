@@ -1,18 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace PDFSign.Models
 {
     public interface IRepository<T>
     {
-        T GetById(int Id);
+        T GetById(int id);
         IEnumerable<T> GetAll();
-        T GetByName(string Name);
-        void Add(T Entity);
-        void Delete(T Entity);
-        void Update(T Entity);
+        T GetByName(string name);
+        void Add(T entity);
+        void Delete(T entity);
+        void Update(T entity);
     }
 }

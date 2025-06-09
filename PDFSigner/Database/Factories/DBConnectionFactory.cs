@@ -1,20 +1,16 @@
 ﻿using PDFSign.Repositories;
 using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Data.SQLite;
 
 namespace PDFSign.Database.Factories
 {
-    public class DBConnectionFactory : ISqlConnectionFactory, IDisposable
+    public class DbConnectionFactory : ISqlConnectionFactory, IDisposable
     {
         private readonly string _connectionString;
         private IDbConnection _connection;
 
-        public DBConnectionFactory(string connectionString)
+        public DbConnectionFactory(string connectionString)
         {
             this._connectionString = connectionString;
         }

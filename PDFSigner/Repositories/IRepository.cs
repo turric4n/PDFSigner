@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace PDFSign.Repositories
+﻿namespace PDFSign.Repositories
 {
-    public interface IRepository<Stream>
+    public interface IRepository<TStream>
     {
-        void Save(Stream stream);
-        Stream Load(string path);
+        void Save(TStream stream);
+        TStream Load(string path);
     }
 }

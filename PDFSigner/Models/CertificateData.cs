@@ -10,8 +10,7 @@ namespace PDFSign.Models
     public class CertificateData
     {
         public long Id { get; private set; }
-        public string Businessname { get; private set; }
-
+        public string BusinessName { get; private set; }
         public string Password { get; private set; }
         public string Path { get; private set; }
 
@@ -19,11 +18,11 @@ namespace PDFSign.Models
         {
         }
 
-        public CertificateData(long Id, string Password, string Path, string BusinessName)
+        public CertificateData(long id, string password, string path, string businessName)
         {
-            SetCertificatePassWord(Password);
-            SetPath(Path);
-            SetBusinessName(BusinessName);
+            SetCertificatePassWord(password);
+            SetPath(path);
+            SetBusinessName(businessName);
         }
 
         public void SetCertificatePassWord(string password)
@@ -44,7 +43,7 @@ namespace PDFSign.Models
         {
             businessname.Requires(businessname)
                 .IsNotEmpty();
-            Businessname = businessname;
+            BusinessName = businessname;
         }
     }
 }

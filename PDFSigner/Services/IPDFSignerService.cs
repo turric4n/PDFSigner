@@ -1,16 +1,11 @@
 ﻿using PDFSign.Models;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PDFSign.Services
 {
-    public interface IPDFSignerService
+    public interface IPdfSignerService
     {
-        Stream SignPDF(Stream pdfstream, Certificate certificate);
-        bool IsSigned(Stream pdfstream);
+        Stream SignPdf(Stream pdfStream, Certificate certificate);
+        bool IsSigned(Stream pdfStream);
     }
 }
